@@ -1,5 +1,8 @@
 const video = document.querySelector("#video");
 const videoInput = document.querySelector("#videoInput");
+const youtubeForm = document.querySelector("#youtubeForm");
+const youtubeUrl = document.querySelector("#youtubeUrl");
+const youtubePlayerElement = document.querySelector("#youtubePlayer");
 const transcript = document.querySelector("#transcript");
 const segmentList = document.querySelector("#segmentList");
 const segmentCount = document.querySelector("#segmentCount");
@@ -28,6 +31,9 @@ let markStart = 0;
 let markEnd = 0;
 let loopActive = false;
 let currentStep = "listen";
+let playerMode = "local";
+let youtubePlayer = null;
+let pendingYouTubeId = "";
 
 const stepCopy = {
   listen: {
@@ -55,16 +61,32 @@ const stepCopy = {
 videoInput.addEventListener("change", () => {
   const file = videoInput.files?.[0];
   if (!file) return;
+  playerMode = "local";
+  video.classList.add("active-player");
+  youtubePlayerElement.classList.remove("active-player");
+  if (youtubePlayer?.pauseVideo) youtubePlayer.pauseVideo();
   video.src = URL.createObjectURL(file);
   video.load();
 });
 
+youtubeForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const videoId = getYouTubeId(youtubeUrl.value);
+  if (!videoId) {
+    youtubeUrl.setCustomValidity("Plak een geldige YouTube-link.");
+    youtubeUrl.reportValidity();
+    return;
+  }
+  youtubeUrl.setCustomValidity("");
+  loadYouTubeVideo(videoId);
+});
+
 slowBtn.addEventListener("click", () => {
-  video.playbackRate = 0.75;
+  setPlaybackRate(0.75);
 });
 
 normalBtn.addEventListener("click", () => {
-  video.playbackRate = 1;
+  setPlaybackRate(1);
 });
 
 loopBtn.addEventListener("click", () => {
@@ -73,12 +95,12 @@ loopBtn.addEventListener("click", () => {
 });
 
 markStartBtn.addEventListener("click", () => {
-  markStart = video.currentTime || 0;
+  markStart = getCurrentTime();
   markStartBtn.textContent = `Start ${formatTime(markStart)}`;
 });
 
 markEndBtn.addEventListener("click", () => {
-  markEnd = video.currentTime || markStart + 4;
+  markEnd = getCurrentTime() || markStart + 4;
   markEndBtn.textContent = `Einde ${formatTime(markEnd)}`;
 });
 
@@ -94,7 +116,8 @@ addSegmentBtn.addEventListener("click", () => {
 autoCutBtn.addEventListener("click", () => {
   const pieces = splitTranscript(transcript.value);
   if (!pieces.length) return;
-  const duration = Number.isFinite(video.duration) ? video.duration : pieces.length * 5;
+  const mediaDuration = getDuration();
+  const duration = Number.isFinite(mediaDuration) && mediaDuration > 0 ? mediaDuration : pieces.length * 5;
   const slice = Math.max(3, duration / pieces.length);
   segments = pieces.map((text, index) => ({
     text,
@@ -123,7 +146,7 @@ tabs.forEach((tab) => {
 
 playStepBtn.addEventListener("click", () => {
   if (activeIndex < 0) return;
-  video.playbackRate = stepCopy[currentStep].rate;
+  setPlaybackRate(stepCopy[currentStep].rate);
   playSegment(segments[activeIndex]);
 });
 
@@ -163,13 +186,22 @@ speakBtn.addEventListener("click", () => {
 });
 
 video.addEventListener("timeupdate", () => {
-  if (!loopActive || activeIndex < 0) return;
+  if (playerMode !== "local" || !loopActive || activeIndex < 0) return;
   const segment = segments[activeIndex];
   if (video.currentTime >= segment.end) {
     video.currentTime = segment.start;
     video.play();
   }
 });
+
+setInterval(() => {
+  if (playerMode !== "youtube" || !loopActive || activeIndex < 0 || !youtubePlayer?.getCurrentTime) return;
+  const segment = segments[activeIndex];
+  if (youtubePlayer.getCurrentTime() >= segment.end) {
+    youtubePlayer.seekTo(segment.start, true);
+    youtubePlayer.playVideo();
+  }
+}, 250);
 
 function splitTranscript(text) {
   return text
@@ -253,9 +285,92 @@ function updateStep() {
 }
 
 function playSegment(segment) {
+  if (playerMode === "youtube" && youtubePlayer?.seekTo) {
+    youtubePlayer.seekTo(segment.start, true);
+    youtubePlayer.playVideo();
+    return;
+  }
   video.currentTime = segment.start;
   video.play();
 }
+
+function getCurrentTime() {
+  if (playerMode === "youtube" && youtubePlayer?.getCurrentTime) {
+    return youtubePlayer.getCurrentTime() || 0;
+  }
+  return video.currentTime || 0;
+}
+
+function getDuration() {
+  if (playerMode === "youtube" && youtubePlayer?.getDuration) {
+    return youtubePlayer.getDuration() || 0;
+  }
+  return video.duration || 0;
+}
+
+function setPlaybackRate(rate) {
+  if (playerMode === "youtube" && youtubePlayer?.setPlaybackRate) {
+    youtubePlayer.setPlaybackRate(rate);
+    return;
+  }
+  video.playbackRate = rate;
+}
+
+function loadYouTubeVideo(videoId) {
+  playerMode = "youtube";
+  video.pause();
+  video.classList.remove("active-player");
+  youtubePlayerElement.classList.add("active-player");
+
+  if (!window.YT?.Player) {
+    pendingYouTubeId = videoId;
+    return;
+  }
+
+  if (!youtubePlayer) {
+    youtubePlayer = new YT.Player("youtubePlayer", {
+      videoId,
+      playerVars: {
+        playsinline: 1,
+        rel: 0,
+        modestbranding: 1
+      }
+    });
+    return;
+  }
+
+  youtubePlayer.loadVideoById(videoId);
+}
+
+function getYouTubeId(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname.includes("youtu.be")) {
+      return url.pathname.split("/").filter(Boolean)[0] || "";
+    }
+    if (url.hostname.includes("youtube.com")) {
+      if (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/embed/")) {
+        return url.pathname.split("/").filter(Boolean)[1] || "";
+      }
+      return url.searchParams.get("v") || "";
+    }
+  } catch {
+    return /^[a-zA-Z0-9_-]{11}$/.test(trimmed) ? trimmed : "";
+  }
+
+  return "";
+}
+
+window.onYouTubeIframeAPIReady = () => {
+  if (pendingYouTubeId) {
+    const videoId = pendingYouTubeId;
+    pendingYouTubeId = "";
+    loadYouTubeVideo(videoId);
+  }
+};
 
 function formatTime(seconds) {
   const safe = Math.max(0, Number(seconds) || 0);
