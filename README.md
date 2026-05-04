@@ -5,6 +5,7 @@ Een eerste lokaal prototype van een AI-achtige spreekcoach die video gebruikt al
 ## Wat werkt nu
 
 - Een eigen video laden in de browser.
+- Een YouTube-link plakken en als oefenvideo gebruiken.
 - Transcript of tekst plakken.
 - De tekst automatisch knippen in kleine oefenstukjes.
 - Een fragment vertraagd afspelen.
@@ -16,6 +17,8 @@ Een eerste lokaal prototype van een AI-achtige spreekcoach die video gebruikt al
 ## Starten
 
 Open `index.html` in je browser. Chrome of Edge werkt het best voor spraakherkenning.
+
+Je kunt een eigen videobestand kiezen of een YouTube-link plakken. Voor YouTube moet je online zijn, omdat de speler via YouTube geladen wordt.
 
 ## Echte AI-uitbreiding
 
