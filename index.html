@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Video Spreekcoach</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="studio" aria-label="Video oefenruimte">
+        <div class="video-pane">
+          <header class="topbar">
+            <div>
+              <p class="eyebrow">Video Spreekcoach</p>
+              <h1>Leer praten door te kijken, luisteren en herhalen</h1>
+            </div>
+            <label class="file-button">
+              <input id="videoInput" type="file" accept="video/*">
+              Kies video
+            </label>
+          </header>
+
+          <video id="video" controls playsinline></video>
+
+          <div class="transport" aria-label="Afspeelinstellingen">
+            <button id="slowBtn" type="button">0.75x</button>
+            <button id="normalBtn" type="button">1x</button>
+            <button id="loopBtn" type="button" aria-pressed="false">Loop</button>
+            <button id="markStartBtn" type="button">Start</button>
+            <button id="markEndBtn" type="button">Einde</button>
+            <button id="addSegmentBtn" type="button">Maak stukje</button>
+          </div>
+
+          <div class="current-card">
+            <div>
+              <p class="label">Nu oefenen</p>
+              <h2 id="currentTitle">Nog geen stukje gekozen</h2>
+            </div>
+            <p id="currentText">Laad een video en plak tekst of maak zelf stukjes met start en einde.</p>
+          </div>
+        </div>
+
+        <aside class="coach-pane" aria-label="Oefencoach">
+          <nav class="tabs" aria-label="Oefenstappen">
+            <button class="tab active" data-step="listen" type="button">Luister</button>
+            <button class="tab" data-step="slow" type="button">Traag</button>
+            <button class="tab" data-step="repeat" type="button">Herhaal</button>
+            <button class="tab" data-step="compare" type="button">Vergelijk</button>
+          </nav>
+
+          <section class="coach-card">
+            <p class="label">Stap voor stap</p>
+            <h2 id="stepTitle">Eerst kijken</h2>
+            <p id="stepBody">Kijk naar de mond, luister naar ritme en pauzes, en probeer nog niet meteen perfect te zijn.</p>
+            <button id="playStepBtn" class="primary" type="button">Speel deze stap</button>
+          </section>
+
+          <section class="coach-card">
+            <p class="label">Jouw poging</p>
+            <button id="speakBtn" type="button">Start spreken</button>
+            <p id="speechStatus" class="muted">Je browser kan je stem herkennen als spraakherkenning beschikbaar is.</p>
+            <blockquote id="spokenText">Je herhaling verschijnt hier.</blockquote>
+            <div class="score">
+              <span>Gelijkenis</span>
+              <strong id="scoreValue">--</strong>
+            </div>
+          </section>
+        </aside>
+      </section>
+
+      <section class="lesson-builder" aria-label="Les maken">
+        <div class="builder-panel">
+          <h2>Tekst of transcript</h2>
+          <p>Plak wat er in de video gezegd wordt. De coach knipt dit in korte leerstukjes, zoals kinderen taal leren: klein, traag, herhaald.</p>
+          <textarea id="transcript" spellcheck="false" placeholder="Plak hier de tekst uit de video..."></textarea>
+          <div class="builder-actions">
+            <button id="autoCutBtn" class="primary" type="button">Knip in stukjes</button>
+            <button id="clearBtn" type="button">Wis</button>
+          </div>
+        </div>
+
+        <div class="segments-panel">
+          <div class="panel-heading">
+            <h2>Stukjes</h2>
+            <span id="segmentCount">0</span>
+          </div>
+          <ol id="segmentList" class="segment-list"></ol>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
