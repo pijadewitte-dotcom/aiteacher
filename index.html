@@ -21,7 +21,15 @@
             </label>
           </header>
 
-          <video id="video" controls playsinline></video>
+          <form id="youtubeForm" class="youtube-form">
+            <input id="youtubeUrl" type="url" placeholder="Plak een YouTube-link..." aria-label="YouTube-link">
+            <button type="submit" class="primary">Laad YouTube</button>
+          </form>
+
+          <div class="player-frame">
+            <video id="video" class="active-player" controls playsinline></video>
+            <div id="youtubePlayer" class="youtube-player" aria-label="YouTube-video"></div>
+          </div>
 
           <div class="transport" aria-label="Afspeelinstellingen">
             <button id="slowBtn" type="button">0.75x</button>
@@ -90,6 +98,7 @@
       </section>
     </main>
 
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="app.js"></script>
   </body>
 </html>
