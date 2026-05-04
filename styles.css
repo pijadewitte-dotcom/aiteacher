@@ -125,13 +125,50 @@ h2 {
   line-height: 1.2;
 }
 
-video {
+.youtube-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.youtube-form input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 14px;
+  color: var(--ink);
+  background: #fff;
+}
+
+.player-frame {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  background: #101612;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+video,
+.youtube-player {
   width: 100%;
   height: 100%;
   min-height: 320px;
   background: #101612;
-  border-radius: 8px;
   object-fit: contain;
+}
+
+video:not(.active-player),
+.youtube-player:not(.active-player) {
+  display: none;
+}
+
+.youtube-player iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border: 0;
 }
 
 .file-button input {
@@ -338,6 +375,7 @@ textarea {
   }
 
   .topbar,
+  .youtube-form,
   .current-card {
     grid-template-columns: 1fr;
     display: grid;
